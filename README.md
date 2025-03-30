@@ -87,6 +87,8 @@ This initial commit sets up the basic NestJS project structure.
     GET `/get-my-account-details`
   - Get User Account Details: Retrieves account details for a specific user by their ID.
     GET `/get-user-account-details/:userId`
+ - Authentication
+   - Docker containerization
 
 ## Future Development
 This project will be expanded to include:
@@ -94,5 +96,5 @@ This project will be expanded to include:
 * Double-entry accounting
 * ACID compliance using MongoDB transactions
 * Unit tests.
-* Docker containerization
+
 
