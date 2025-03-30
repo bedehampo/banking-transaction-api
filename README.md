@@ -69,23 +69,23 @@ This initial commit sets up the basic NestJS project structure.
 Authentication
 This project now includes a basic authentication process with the following endpoints:
 
-Register User: Allows users to register, automatically creating an account for them.
+ - Register User: Allows users to register, automatically creating an account for them.
 POST `/create-account`
-Login: Authenticates users and provides access to protected endpoints.
+- Login: Authenticates users and provides access to protected endpoints.
 POST `/login`
-Get Logged-In User: Retrieves details of the currently logged-in user.
+- Get Logged-In User: Retrieves details of the currently logged-in user.
 GET `/get-login-user`
-Get All Users: Fetches a list of all registered users.
+- Get All Users: Fetches a list of all registered users.
 GET `/get-users`
-Get User by ID: Retrieves details of a specific user by their ID.
+- Get User by ID: Retrieves details of a specific user by their ID.
 GET `/get-user/:id`
 
 ## Account Management
 The following endpoints are available for account-related operations:
 
-Get My Account Details: Retrieves the account details of the logged-in user.
+- Get My Account Details: Retrieves the account details of the logged-in user.
 GET `/get-my-account-details`
-Get User Account Details: Retrieves account details for a specific user by their ID.
+- Get User Account Details: Retrieves account details for a specific user by their ID.
 GET `/get-user-account-details/:userId`
 
 ## Future Development
