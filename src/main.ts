@@ -8,6 +8,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  app.enableCors();
+
   // Global validation setup
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,10 +24,17 @@ async function bootstrap() {
     .setTitle('Banking Ledger API')
     .setDescription('Banking Ledger API documentation')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'jwt',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/v1', app, document);
+  SwaggerModule.setup('api', app, document);
 
   const PORT = process.env.PORT;
 
