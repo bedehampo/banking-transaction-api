@@ -10,12 +10,30 @@ export class User extends Document {
   lastName: string;
 
   @Prop({ required: true, unique: true })
-  email: string;
+  mobileNumber: string;
 
   @Prop({ required: true })
   password: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Account', required: true })
+  @Prop()
+  otp: string;
+
+  @Prop()
+  otpExpiry: Date;
+
+  @Prop()
+  pin: string;
+
+  @Prop({ default: false })
+  isPinSet: boolean;
+
+  @Prop({
+    enum: ['unverified', 'verified'],
+    default: 'unverified',
+  })
+  status: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Account' })
   accountId: Types.ObjectId;
 }
 
