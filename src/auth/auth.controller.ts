@@ -1,9 +1,20 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
+import { AuthGuard } from '@nestjs/passport';
+import { PaginationDto } from './dto/pagination.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -25,7 +36,24 @@ export class AuthController {
   // Get login user
   @Get('get-login-user')
   @ApiBearerAuth('jwt')
+  @UseGuards(AuthGuard('jwt'))
   async getLoginUser(@Req() req: CustomRequest) {
     return this.authService.getLoginUser(req);
+  }
+
+  // Get users
+  @Get('get-users')
+  @ApiBearerAuth('jwt')
+  @UseGuards(AuthGuard('jwt'))
+  async getUsers(@Req() req: CustomRequest, @Query() dto: PaginationDto) {
+    return this.authService.getUsers(req, dto);
+  }
+
+  // Get user by id
+  @Get('get-user/:id')
+  @ApiBearerAuth('jwt')
+  @UseGuards(AuthGuard('jwt'))
+  async getUser(@Req() req: CustomRequest, @Param('id') id: string) {
+    return this.authService.getUserById(req, id);
   }
 }

@@ -1,6 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from './schema/user.schema';
 import { RegisterDto } from './dto/register.dto';
 import { UserUtils } from './utils/user.validator';
@@ -14,6 +19,7 @@ import { Account } from 'src/accounts/schema/account.schema';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +29,7 @@ export class AuthService {
     @InjectModel('Account') private accountModel: Model<Account>,
     private jwtService: JwtService,
   ) {
-    this.userUtils = new UserUtils(this.userModel);
+    this.userUtils = new UserUtils(this.userModel, this.accountModel);
   }
 
   //Create account
@@ -99,6 +105,7 @@ export class AuthService {
   }
 
   //Login User
+  //Login User
   async login(dto: LoginDto): Promise<{ msg: string; access_token: string }> {
     try {
       const { mobileNumber, password } = dto;
@@ -112,7 +119,7 @@ export class AuthService {
       // verify user password
       await verifyPassword(user.password, password);
 
-      const payload = { email: user.mobileNumber, sub: user._id };
+      const payload = { mobileNumber: user.mobileNumber, sub: user._id };
 
       return {
         msg: 'Login successfully',
@@ -126,13 +133,88 @@ export class AuthService {
   //Get login user
   async getLoginUser(req: CustomRequest): Promise<{ msg: string; data: User }> {
     try {
-      console.log('Req', req.user._id);
       // Check user existence
       const user = await this.userUtils.getUserById(req.user._id);
 
       return {
         msg: 'Login user data retrieved successfully',
         data: user,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //Get users
+  async getUsers(req: CustomRequest, dto: PaginationDto) {
+    try {
+      await this.userUtils.validateUser(req.user._id);
+
+      const { page, limit } = dto;
+
+      const skip = (page - 1) * limit;
+
+      const users = await this.userModel
+        .find({ status: { $in: ['unverified', 'verified'] } })
+        .populate({ path: 'accountId', select: 'accountNumber' })
+        .select('_id firstName lastName accountId')
+        .limit(limit)
+        .skip(skip);
+
+      const totalCount = users.length;
+
+      const totalPages = Math.ceil(totalCount / limit);
+
+      const formattedUsers = users.map((user) => ({
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        // @ts-ignore
+        accountNumber: user.accountId ? user.accountId.accountNumber : null,
+      }));
+
+      const data = {
+        users: formattedUsers,
+        totalCount,
+        totalPages,
+        currentPage: page,
+      };
+
+      return {
+        msg: 'Users retrieved successfully',
+        data: data,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get user by id
+  async getUserById(req: CustomRequest, id: string) {
+    try {
+      await this.userUtils.validateUser(req.user._id);
+
+      const user = await this.userModel
+        .findOne({
+          _id: new Types.ObjectId(id),
+          status: { $in: ['unverified', 'verified'] },
+        })
+        .populate({ path: 'accountId', select: 'accountNumber' })
+        .select('_id firstName lastName accountId');
+
+      if (!user) throw new NotFoundException('account does not exist');
+
+      const formattedUser = {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        // @ts-ignore
+        accountNumber: user.accountId ? user.accountId.accountNumber : null,
+      };
+
+      return {
+        msg: 'User retrieved successfully',
+        data: formattedUser,
       };
     } catch (error) {
       throw error;

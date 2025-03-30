@@ -28,7 +28,7 @@ export class User extends Document {
   isPinSet: boolean;
 
   @Prop({
-    enum: ['unverified', 'verified'],
+    enum: ['unverified', 'verified', 'suspended', 'deleted'],
     default: 'unverified',
   })
   status: string;
