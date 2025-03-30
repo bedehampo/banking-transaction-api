@@ -14,6 +14,18 @@ export class Transaction extends Document {
 
   @Prop({ required: true })
   currency: string;
+
+  @Prop({ required: true })
+  description: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Account', required: true })
+  senderAccountId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'Account', required: true })
+  destinationAccountId: Types.ObjectId;
+
+  @Prop({ required: true })
+  credit: boolean;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

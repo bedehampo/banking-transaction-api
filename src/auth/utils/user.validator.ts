@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { User } from '../schema/user.schema';
@@ -43,6 +44,7 @@ export class UserUtils {
 
   async validateUser(id: Types.ObjectId) {
     const user = await this.userModel.findById(id);
+    if (!user) throw new NotFoundException('account not found');
     if (user.status === 'suspended' || user.status === 'deleted') {
       throw new UnauthorizedException('unauthorised operator');
     }
