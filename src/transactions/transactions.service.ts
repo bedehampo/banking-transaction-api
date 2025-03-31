@@ -21,7 +21,6 @@ import {
   IPaginateTransaction,
   ITransaction,
 } from 'src/common/interfaces/general.interface';
-import { CurrencyService } from './currency.service';
 import { convertCurrency, verifyPassword } from 'src/common/utils/helper';
 import { DepositTransactionDto } from './dto/deposit-transaction.dto';
 import { Status, TransactionTypeStatus } from 'src/common/enums/status.enums';
@@ -44,7 +43,6 @@ export class TransactionsService {
     @InjectModel('CurrencySymbol') private currencyModel: Model<CurrencySymbol>,
     @InjectModel('LedgerEntry') private ledgerModel: Model<LedgerEntry>,
     private jwtService: JwtService,
-    private readonly currencyService: CurrencyService,
   ) {
     this.userUtils = new UserUtils(this.userModel, this.accountModel);
     this.transactionUtils = new TransactionUtils(this.currencyModel);

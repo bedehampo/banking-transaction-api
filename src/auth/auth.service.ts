@@ -108,7 +108,6 @@ export class AuthService {
   }
 
   //Login User
-  //Login User
   async login(dto: LoginDto): Promise<{ msg: string; access_token: string }> {
     try {
       const { mobileNumber, password } = dto;
