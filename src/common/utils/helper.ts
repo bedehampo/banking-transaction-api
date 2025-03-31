@@ -1,6 +1,10 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import axios from 'axios';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
+// Validate Password
 export const validatePassword = (password: string): void => {
   try {
     const minLength = 8;
@@ -26,6 +30,7 @@ export const validatePassword = (password: string): void => {
   }
 };
 
+// Generate OTP
 export const generateOTP = (): { otp: string; otpExpiry: Date } => {
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
   const otpExpiry = new Date();
@@ -34,6 +39,7 @@ export const generateOTP = (): { otp: string; otpExpiry: Date } => {
   return { otp, otpExpiry };
 };
 
+// Verify Password
 export const verifyPassword = async (
   userPassword: string,
   givenPassword: string,
@@ -51,5 +57,44 @@ export const verifyPassword = async (
     throw new UnauthorizedException(
       'Invalid password. Please check your credentials and try again.',
     );
+  }
+};
+
+export const convertCurrency = async (from, to, value) => {
+  const APP_ID = process.env.OPEN_EXCHANGE_RATE_APP_ID;
+  const BASE_URL = process.env.OPEN_EXCHANGE_URL;
+
+  try {
+    if (!from || !to || !value) {
+      throw new BadRequestException('Missing required parameters');
+    }
+
+    const amount = Number(value);
+    if (isNaN(amount) || amount < 0) {
+      throw new BadRequestException('Invalid amount');
+    }
+
+    const response = await axios.get(BASE_URL, {
+      params: { app_id: APP_ID },
+    });
+
+    const rates = response.data.rates;
+    if (!rates[from]) {
+      throw new BadRequestException(`Invalid source currency: ${from}`);
+    }
+    if (!rates[to]) {
+      throw new BadRequestException(`Invalid target currency: ${to}`);
+    }
+
+    const convertedAmount =
+      from === 'USD'
+        ? amount * rates[to]
+        : to === 'USD'
+          ? amount / rates[from]
+          : (amount / rates[from]) * rates[to];
+
+    return convertedAmount;
+  } catch (error) {
+    throw error;
   }
 };

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Status } from 'src/common/enums/status.enums';
 
 @Schema({ collection: 'User', timestamps: true })
 export class User extends Document {
@@ -28,10 +29,11 @@ export class User extends Document {
   isPinSet: boolean;
 
   @Prop({
-    enum: ['unverified', 'verified', 'suspended', 'deleted'],
-    default: 'unverified',
+    type: String,
+    enum: Status,
+    default: Status.UNVERIFIED,
   })
-  status: string;
+  status: Status;
 
   @Prop({ type: Types.ObjectId, ref: 'Account' })
   accountId: Types.ObjectId;

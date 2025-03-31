@@ -116,6 +116,9 @@ export class AuthService {
         formattedMobileNumber,
       );
 
+      //  @ts-ignore
+      await this.userUtils.validateUser(user._id);
+
       // verify user password
       await verifyPassword(user.password, password);
 
