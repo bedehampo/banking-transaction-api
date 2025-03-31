@@ -27,6 +27,7 @@ import { TransactionUtils } from './utils/transaction.utils';
 import { WithdrawTransactionDto } from './dto/withdrawal-transaction.dto';
 import { TransferTransactionDto } from './dto/transfer-transaction.dto';
 import { GetTransactionsDto } from './dto/transactions.dto';
+import { LedgerEntry } from './schema/ledger.schema';
 
 @Injectable()
 export class TransactionsService {
@@ -38,6 +39,7 @@ export class TransactionsService {
     @InjectModel('Account') private accountModel: Model<Account>,
     @InjectModel('Transaction') private transactionModel: Model<Transaction>,
     @InjectModel('CurrencySymbol') private currencyModel: Model<CurrencySymbol>,
+    @InjectModel('LedgerEntry') private ledgerModel: Model<LedgerEntry>,
     private jwtService: JwtService,
     private readonly currencyService: CurrencyService,
   ) {
@@ -123,7 +125,7 @@ export class TransactionsService {
       } = dto;
 
       // deposit value
-      let depositValue;
+      let depositValue = amount;
 
       // validate currency type
       await this.transactionUtils.validateCurrencyCode(currency);
@@ -170,7 +172,47 @@ export class TransactionsService {
       );
 
       account.transactions.push(transaction[0]._id as ObjectId);
-      await account.save();
+      await account.save({ session });
+
+      // Create ledger entries
+      const cashAccount = await this.accountModel.findOne({
+        accountNumber: 'SYSTEM_CASH',
+      });
+
+      if (!cashAccount) {
+        throw new NotFoundException('SYSTEM_CASH account not found');
+      }
+
+      await this.ledgerModel.create(
+        [
+          {
+            transactionId: transaction[0]._id,
+            accountId: account._id,
+            amount: transactionAmount,
+            type: 'credit',
+            description: 'Deposit to account',
+            currency: currency,
+          },
+          {
+            transactionId: transaction[0]._id,
+            accountId: cashAccount._id,
+            amount: transactionAmount,
+            type: 'debit',
+            description: 'Deposit from customer',
+            currency: currency,
+          },
+        ],
+        { session, ordered: true },
+      );
+
+      // Update SYSTEM_CASH balance
+      cashAccount.balance = Decimal128.fromString(
+        (
+          Number(cashAccount.balance.toString()) +
+          Number(transactionAmount.toString())
+        ).toString(),
+      );
+      await cashAccount.save({ session });
 
       await session.commitTransaction();
 
@@ -194,14 +236,12 @@ export class TransactionsService {
     session.startTransaction();
 
     try {
-      // Validate user
       const user = await this.userUtils.validateUser(req.user._id);
 
-      //check if transaction pin is set
-      if (!user.isPinSet)
-        throw new ConflictException('kindly set your transaction pin');
+      if (!user.isPinSet) {
+        throw new ConflictException('Please set your transaction pin.');
+      }
 
-      // Extract data from payload
       const { amount, currency, description } = dto;
 
       await this.transactionUtils.validateCurrencyCode(currency);
@@ -222,25 +262,24 @@ export class TransactionsService {
         })
         .exec();
 
-      if (!account) throw new NotFoundException('account not found');
+      if (!account) {
+        throw new NotFoundException('Account not found.');
+      }
 
-      // sufficient funds check
       if (
         Number(account.balance.toString()) < Number(amountDecimal.toString())
       ) {
-        throw new BadRequestException('Insufficient funds');
+        throw new BadRequestException('Insufficient funds.');
       }
 
-      // balance update
       account.balance = Decimal128.fromString(
         (
           Number(account.balance.toString()) - Number(amountDecimal.toString())
         ).toString(),
       );
-
       await account.save({ session });
 
-      // validate pin
+      // Validate pin
       await verifyPassword(user.pin, pin, 'pin');
 
       const transaction = await this.transactionModel.create(
@@ -259,10 +298,50 @@ export class TransactionsService {
       account.transactions.push(transaction[0]._id as ObjectId);
       await account.save({ session });
 
+      // Ledger Entries
+      const cashAccount = await this.accountModel.findOne({
+        accountNumber: 'SYSTEM_CASH',
+      });
+
+      if (!cashAccount) {
+        throw new NotFoundException('SYSTEM_CASH account not found.');
+      }
+
+      await this.ledgerModel.create(
+        [
+          {
+            transactionId: transaction[0]._id,
+            accountId: account._id,
+            amount: transactionAmount,
+            type: 'debit',
+            description: 'Withdrawal from account',
+            currency: currency,
+          },
+          {
+            transactionId: transaction[0]._id,
+            accountId: cashAccount._id,
+            amount: transactionAmount,
+            type: 'credit',
+            description: 'Withdrawal to customer',
+            currency: currency,
+          },
+        ],
+        { session, ordered: true },
+      );
+
+      // Update SYSTEM_CASH balance
+      cashAccount.balance = Decimal128.fromString(
+        (
+          Number(cashAccount.balance.toString()) -
+          Number(transactionAmount.toString())
+        ).toString(),
+      );
+      await cashAccount.save({ session });
+
       await session.commitTransaction();
 
       return {
-        msg: 'Withdrawal initiated successfully',
+        msg: 'Withdrawal initiated successfully.',
         data: transaction[0],
       };
     } catch (error) {
@@ -281,9 +360,9 @@ export class TransactionsService {
     try {
       const user = await this.userUtils.validateUser(req.user._id);
 
-      //check if transaction pin is set
-      if (!user.isPinSet)
-        throw new ConflictException('kindly set your transaction pin');
+      if (!user.isPinSet) {
+        throw new ConflictException('Please set your transaction pin.');
+      }
 
       const { accountNumber, amount, currency, description } = dto;
 
@@ -298,7 +377,6 @@ export class TransactionsService {
       const amountDecimal = Decimal128.fromString(transferAmountNGN.toString());
       const transactionAmount = Decimal128.fromString(amount.toString());
 
-      // Find sender's account
       const senderAccount = await this.accountModel
         .findOne({
           user: user._id,
@@ -306,10 +384,10 @@ export class TransactionsService {
         })
         .exec();
 
-      if (!senderAccount)
-        throw new NotFoundException('Sender account not found');
+      if (!senderAccount) {
+        throw new NotFoundException('Sender account not found.');
+      }
 
-      // Find recipient's account
       const recipientAccount = await this.accountModel
         .findOne({
           accountNumber: accountNumber,
@@ -317,18 +395,17 @@ export class TransactionsService {
         })
         .exec();
 
-      if (!recipientAccount)
-        throw new NotFoundException('Recipient account not found');
+      if (!recipientAccount) {
+        throw new NotFoundException('Recipient account not found.');
+      }
 
-      // Check for sufficient funds
       if (
         Number(senderAccount.balance.toString()) <
         Number(amountDecimal.toString())
       ) {
-        throw new BadRequestException('Insufficient funds');
+        throw new BadRequestException('Insufficient funds.');
       }
 
-      // Update sender's balance
       senderAccount.balance = Decimal128.fromString(
         (
           Number(senderAccount.balance.toString()) -
@@ -337,7 +414,6 @@ export class TransactionsService {
       );
       await senderAccount.save({ session });
 
-      // Update recipient's balance
       recipientAccount.balance = Decimal128.fromString(
         (
           Number(recipientAccount.balance.toString()) +
@@ -346,17 +422,16 @@ export class TransactionsService {
       );
       await recipientAccount.save({ session });
 
-      // validate pin
+      // Validate pin
       await verifyPassword(user.pin, pin, 'pin');
 
-      // Create transaction records
       const transactions = await this.transactionModel.create(
         [
           {
             amount: transactionAmount,
             type: TransactionTypeStatus.TRANSFER,
             currency,
-            description: description,
+            description,
             credit: false,
             destinationAccountId: recipientAccount._id,
           },
@@ -366,7 +441,7 @@ export class TransactionsService {
             amount: transactionAmount,
             type: TransactionTypeStatus.TRANSFER,
             currency,
-            description: description,
+            description,
             credit: true,
             senderAccountId: senderAccount._id,
           },
@@ -379,10 +454,33 @@ export class TransactionsService {
       recipientAccount.transactions.push(transactions[1]._id as ObjectId);
       await recipientAccount.save({ session });
 
+      // Ledger Entries
+      await this.ledgerModel.create(
+        [
+          {
+            transactionId: transactions[0]._id,
+            accountId: senderAccount._id,
+            amount: transactionAmount,
+            type: 'debit',
+            description: 'Transfer to ' + recipientAccount.accountNumber,
+            currency: currency,
+          },
+          {
+            transactionId: transactions[1]._id,
+            accountId: recipientAccount._id,
+            amount: transactionAmount,
+            type: 'credit',
+            description: 'Transfer from ' + senderAccount.accountNumber,
+            currency: currency,
+          },
+        ],
+        { session, ordered: true },
+      );
+
       await session.commitTransaction();
 
       return {
-        msg: 'Transfer initiated successfully',
+        msg: 'Transfer initiated successfully.',
         data: transactions[0],
       };
     } catch (error) {
@@ -474,8 +572,30 @@ export class TransactionsService {
     }
   }
 
+  // Seed Cash Account
+  //   async seedCashAccount() {
+  //     try {
+  //       const cashAccount = await this.accountModel.create({
+  //         user: null,
+  //         accountNumber: 'SYSTEM_CASH',
+  //         balance: new Decimal128('10000000000'),
+  //         currency: 'NGN',
+  //         status: Status.VERIFIED,
+  //         transactions: [],
+  //       });
+
+  //       await cashAccount.save();
+  //       console.log('Cash account seeded successfully.');
+  //     } catch (error) {
+  //       console.error('Error seeding cash account:', error);
+  //     } finally {
+  //       process.exit();
+  //     }
+  //   }
+
   @Cron(CronExpression.EVERY_SECOND)
   async handleCronMinutes() {
+    // await this.seedCashAccount();
     // this.logger.log('Cron job executed every second');
     // await this.saveCurrencyInfo();
   }

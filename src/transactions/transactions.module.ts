@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Transaction, TransactionSchema } from './schema/transaction.schema';
 import { CurrencySymbol, CurrencySymbolSchema } from './schema/currency.schema';
 import { CurrencyService } from './currency.service';
+import { LedgerEntry, LedgerEntrySchema } from './schema/ledger.schema';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CurrencyService } from './currency.service';
       { name: Account.name, schema: AccountSchema },
       { name: Transaction.name, schema: TransactionSchema },
       { name: CurrencySymbol.name, schema: CurrencySymbolSchema },
+      { name: LedgerEntry.name, schema: LedgerEntrySchema },
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

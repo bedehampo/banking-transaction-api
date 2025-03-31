@@ -5,10 +5,10 @@ import { Status } from 'src/common/enums/status.enums';
 
 @Schema({ collection: 'Account', timestamps: true })
 export class Account extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, unique: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', index: true })
   user: Types.ObjectId;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, index: true })
   accountNumber: string;
 
   @Prop({
