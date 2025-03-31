@@ -18,7 +18,7 @@ export class Transaction extends Document {
   })
   amount: Decimal128;
 
-  @Prop({ required: true, enum: TransactionTypeStatus })
+  @Prop({ required: true, enum: TransactionTypeStatus, index: true })
   type: TransactionTypeStatus;
 
   @Prop({ required: true })
