@@ -6,6 +6,8 @@ import {
   Query,
   Req,
   UseGuards,
+  Headers,
+  Param,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import {
@@ -20,6 +22,7 @@ import { CustomRequest } from 'src/common/interfaces/custom-request';
 import { DepositTransactionDto } from './dto/deposit-transaction.dto';
 import { WithdrawTransactionDto } from './dto/withdrawal-transaction.dto';
 import { TransferTransactionDto } from './dto/transfer-transaction.dto';
+import { GetTransactionsDto } from './dto/transactions.dto';
 
 @ApiTags('transactions')
 @Controller('transactions')
@@ -60,8 +63,9 @@ export class TransactionsController {
   async withdraw(
     @Req() req: CustomRequest,
     @Body() dto: WithdrawTransactionDto,
+    @Headers('X-Transaction-PIN') pin: string,
   ) {
-    return this.transactionsService.withdraw(req, dto);
+    return this.transactionsService.withdraw(req, dto, pin);
   }
 
   // transfer
@@ -73,7 +77,32 @@ export class TransactionsController {
   async transfer(
     @Req() req: CustomRequest,
     @Body() dto: TransferTransactionDto,
+    @Headers('X-Transaction-PIN') pin: string,
   ) {
-    return this.transactionsService.transfer(req, dto);
+    return this.transactionsService.transfer(req, dto, pin);
+  }
+
+  //Get transactions
+  @Get('transactions')
+  @ApiBearerAuth('jwt')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Retrieved your transactions history' })
+  async getTransactionHistory(
+    @Req() req: CustomRequest,
+    @Query() query: GetTransactionsDto,
+  ) {
+    return this.transactionsService.getTransactions(req, query);
+  }
+
+  // Get transaction:{id}
+  @Get('transaction/:id')
+  @ApiBearerAuth('jwt')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Retrieved your transaction history' })
+  async getSingleTransactionHistory(
+    @Req() req: CustomRequest,
+    @Param('id') id: string,
+  ) {
+    return this.transactionsService.getTransaction(req, id);
   }
 }

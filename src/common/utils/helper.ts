@@ -43,19 +43,19 @@ export const generateOTP = (): { otp: string; otpExpiry: Date } => {
 export const verifyPassword = async (
   userPassword: string,
   givenPassword: string,
+  word: string,
 ): Promise<void> => {
   try {
     const isPasswordValid = await argon2.verify(userPassword, givenPassword);
     if (!isPasswordValid) {
       throw new UnauthorizedException(
-        'Invalid password. Please check your credentials and try again.',
+        `Invalid ${word}. Please check your credentials and try again.`,
       );
     }
     // No need to return true
   } catch (error) {
-    // If argon2.verify throws an error, re-throw it as an UnauthorizedException.
     throw new UnauthorizedException(
-      'Invalid password. Please check your credentials and try again.',
+      `Invalid ${word}. Please check your credentials and try again.`,
     );
   }
 };

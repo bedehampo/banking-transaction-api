@@ -15,6 +15,7 @@ import { LoginDto } from './dto/login.dto';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 import { AuthGuard } from '@nestjs/passport';
 import { PaginationDto } from './dto/pagination.dto';
+import { SetTransactionPinDto } from './dto/transactionPin.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -55,5 +56,13 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async getUser(@Req() req: CustomRequest, @Param('id') id: string) {
     return this.authService.getUserById(req, id);
+  }
+
+  // Set Transaction Pin
+  @Post('set-pin')
+  @ApiBearerAuth('jwt')
+  @UseGuards(AuthGuard('jwt'))
+  async setPin(@Req() req: CustomRequest, @Body() dto: SetTransactionPinDto) {
+    return this.authService.setTransactionPin(req, dto);
   }
 }

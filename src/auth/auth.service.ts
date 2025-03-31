@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -20,6 +21,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 import { PaginationDto } from './dto/pagination.dto';
+import { SetTransactionPinDto } from './dto/transactionPin.dto';
 
 @Injectable()
 export class AuthService {
@@ -120,7 +122,7 @@ export class AuthService {
       await this.userUtils.validateUser(user._id);
 
       // verify user password
-      await verifyPassword(user.password, password);
+      await verifyPassword(user.password, password, 'password');
 
       const payload = { mobileNumber: user.mobileNumber, sub: user._id };
 
@@ -218,6 +220,40 @@ export class AuthService {
       return {
         msg: 'User retrieved successfully',
         data: formattedUser,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // set transaction pin
+  async setTransactionPin(req: CustomRequest, dto: SetTransactionPinDto) {
+    try {
+      //validate user
+      const user = await this.userUtils.validateUser(req.user._id);
+
+      // Extract data from payload
+      const { pin, confirmPin } = dto;
+
+      //verify
+      if (pin !== confirmPin) throw new ConflictException('pin does not match');
+
+      //verify if pin match
+      const hashedPin = await argon2.hash(pin);
+
+      await this.userModel.findByIdAndUpdate(
+        {
+          _id: user.id,
+        },
+        {
+          pin: hashedPin,
+          isPinSet: true,
+        },
+        { new: true },
+      );
+
+      return {
+        msg: 'Transaction pin set successfully',
       };
     } catch (error) {
       throw error;

@@ -79,6 +79,10 @@ This initial commit sets up the basic NestJS project structure.
        GET `/get-users`
      - Get User by ID: Retrieves details of a specific user by their ID.
        GET `/get-user/:id`
+     - Set transaction pin.
+       PosT `set-pin`
+     
+     
        
 - Account Management
   The following endpoints are available for account-related operations:
@@ -90,11 +94,24 @@ This initial commit sets up the basic NestJS project structure.
  - Authentication
    - Docker containerization
 
+
+- Transaction Management
+  The following endpoints are available for transaction-related operations:
+  - Get currencies and code
+    Get `get-currencies`
+  - Deposit money.
+    Post `deposit`
+  - Withdraw money
+    Post `withdraw`
+  - Transfer money
+    Post `transfer`
+  - Get transactions history
+    Get `transactions`
+  - Get single transaction history
+    Get `transaction/:id`
+
 ## Future Development
 This project will be expanded to include:
-* Financial transactions (deposits, withdrawals, transfers)
-* Double-entry accounting
-* ACID compliance using MongoDB transactions
 * Unit tests.
 
 

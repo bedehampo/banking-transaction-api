@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Account } from 'src/accounts/schema/account.schema';
 import { User } from 'src/auth/schema/user.schema';
 import { UserUtils } from 'src/auth/utils/user.validator';
@@ -17,13 +19,14 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 import { ICurrency } from 'src/common/interfaces/general.interface';
 import { CurrencyService } from './currency.service';
-import { convertCurrency } from 'src/common/utils/helper';
+import { convertCurrency, verifyPassword } from 'src/common/utils/helper';
 import { DepositTransactionDto } from './dto/deposit-transaction.dto';
 import { Status, TransactionTypeStatus } from 'src/common/enums/status.enums';
 import { Decimal128, ObjectId } from 'mongodb';
 import { TransactionUtils } from './utils/transaction.utils';
 import { WithdrawTransactionDto } from './dto/withdrawal-transaction.dto';
 import { TransferTransactionDto } from './dto/transfer-transaction.dto';
+import { GetTransactionsDto } from './dto/transactions.dto';
 
 @Injectable()
 export class TransactionsService {
@@ -186,13 +189,17 @@ export class TransactionsService {
   }
 
   // withdrawal
-  async withdraw(req: CustomRequest, dto: WithdrawTransactionDto) {
+  async withdraw(req: CustomRequest, dto: WithdrawTransactionDto, pin: string) {
     const session = await this.accountModel.db.startSession();
     session.startTransaction();
 
     try {
       // Validate user
       const user = await this.userUtils.validateUser(req.user._id);
+
+      //check if transaction pin is set
+      if (!user.isPinSet)
+        throw new ConflictException('kindly set your transaction pin');
 
       // Extract data from payload
       const { amount, currency, description } = dto;
@@ -233,6 +240,9 @@ export class TransactionsService {
 
       await account.save({ session });
 
+      // validate pin
+      await verifyPassword(user.pin, pin, 'pin');
+
       const transaction = await this.transactionModel.create(
         [
           {
@@ -264,12 +274,17 @@ export class TransactionsService {
   }
 
   // transfer
-  async transfer(req: CustomRequest, dto: TransferTransactionDto) {
+  async transfer(req: CustomRequest, dto: TransferTransactionDto, pin: string) {
     const session = await this.accountModel.db.startSession();
     session.startTransaction();
 
     try {
       const user = await this.userUtils.validateUser(req.user._id);
+
+      //check if transaction pin is set
+      if (!user.isPinSet)
+        throw new ConflictException('kindly set your transaction pin');
+
       const { accountNumber, amount, currency, description } = dto;
 
       await this.transactionUtils.validateCurrencyCode(currency);
@@ -331,6 +346,9 @@ export class TransactionsService {
       );
       await recipientAccount.save({ session });
 
+      // validate pin
+      await verifyPassword(user.pin, pin, 'pin');
+
       // Create transaction records
       const transactions = await this.transactionModel.create(
         [
@@ -372,6 +390,87 @@ export class TransactionsService {
       throw error;
     } finally {
       session.endSession();
+    }
+  }
+
+  // Get transactions
+  async getTransactions(req: CustomRequest, query: GetTransactionsDto) {
+    try {
+      const user = await this.userUtils.validateUser(req.user._id);
+      const { type, page = 1, limit = 10 } = query;
+
+      const skip = (page - 1) * limit;
+
+      const account = await this.accountModel
+        .findOne({ user: user._id })
+        .exec();
+
+      if (!account) {
+        throw new NotFoundException('Account not found');
+      }
+
+      // Create a separate filter object
+      let filter = { _id: { $in: account.transactions } };
+
+      // Add the type property if it exists
+      if (type) {
+        //   @ts-ignore
+        filter = { ...filter, type: type };
+      }
+
+      const transactions = await this.transactionModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      const totalCount = await this.transactionModel.countDocuments(filter);
+
+      return {
+        msg: 'Transaction history retrieved successfully',
+        data: {
+          transactions,
+          totalCount,
+          currentPage: page,
+          totalPages: Math.ceil(totalCount / limit),
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Get transaction
+  async getTransaction(req: CustomRequest, id: string) {
+    try {
+      const user = await this.userUtils.validateUser(req.user._id);
+
+      const newId = new Types.ObjectId(id);
+      // Check if the transaction belongs to the user's account
+      const account = await this.accountModel.findOne({
+        user: user._id,
+        transactions: { $in: [newId] },
+      });
+
+      if (!account) {
+        throw new NotFoundException(
+          'Transaction not associated with your account',
+        );
+      }
+
+      // Retrieve the transaction
+      const transaction = await this.transactionModel.findById(id).exec();
+
+      if (!transaction) {
+        throw new NotFoundException('Transaction not found');
+      }
+
+      return {
+        msg: 'Transaction retrieved successfully',
+        data: transaction,
+      };
+    } catch (error) {
+      throw error;
     }
   }
 
