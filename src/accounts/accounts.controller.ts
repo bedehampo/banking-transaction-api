@@ -1,9 +1,10 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 
+@ApiTags('accounts')
 @Controller('accounts')
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}

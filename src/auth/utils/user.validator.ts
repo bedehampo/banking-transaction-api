@@ -48,5 +48,6 @@ export class UserUtils {
     if (user.status === 'suspended' || user.status === 'deleted') {
       throw new UnauthorizedException('unauthorised operator');
     }
+    return user;
   }
 }

@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Decimal128 } from 'mongodb';
+import { Status } from 'src/common/enums/status.enums';
 
 @Schema({ collection: 'Account', timestamps: true })
 export class Account extends Document {
@@ -9,11 +11,22 @@ export class Account extends Document {
   @Prop({ required: true, unique: true })
   accountNumber: string;
 
-  @Prop({ required: true, default: 0 })
-  balance: number;
+  @Prop({
+    type: Decimal128,
+    required: true,
+    default: new Decimal128('0'),
+  })
+  balance: Decimal128;
 
   @Prop({ required: true, default: 'NGN' })
   currency: string;
+
+  @Prop({
+    type: String,
+    enum: Status,
+    default: Status.VERIFIED,
+  })
+  status: Status;
 
   @Prop({ ref: 'Transaction', type: [Types.ObjectId] })
   transactions: Types.ObjectId[];
