@@ -7,6 +7,7 @@ import { User } from 'src/auth/schema/user.schema';
 import { Account } from './schema/account.schema';
 import { UserUtils } from 'src/auth/utils/user.validator';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
+import { IAccountDetails } from 'src/common/interfaces/auth.interface';
 
 @Injectable()
 export class AccountsService {
@@ -21,7 +22,9 @@ export class AccountsService {
   }
 
   //get my account details
-  async getAccountDetails(req: CustomRequest) {
+  async getAccountDetails(
+    req: CustomRequest,
+  ): Promise<{ msg: string; data: IAccountDetails }> {
     try {
       // validate user
       await this.userUtils.validateUser(req.user._id);
@@ -56,7 +59,10 @@ export class AccountsService {
   }
 
   // get user account details
-  async getUserAccountDetails(req: CustomRequest, userId: string) {
+  async getUserAccountDetails(
+    req: CustomRequest,
+    userId: string,
+  ): Promise<{ msg: string; data: IAccountDetails }> {
     try {
       // Validate user
       await this.userUtils.validateUser(req.user._id);

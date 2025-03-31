@@ -1,3 +1,5 @@
+import { Decimal128 } from 'mongodb';
+import { Types } from 'mongoose';
 export interface ICurrency {
   _id: string;
   code: string;
@@ -15,4 +17,25 @@ export interface ICurrencyConverter {
     isRatesCaching: boolean;
     ratesCacheDuration?: number;
   }): this;
+}
+
+export interface ITransaction {
+  depositorFirstName: string | null;
+  depositorLastName: string | null;
+  amount: Decimal128;
+  type: 'deposit' | 'withdrawal' | string;
+  currency: string;
+  description: string;
+  senderAccountId: Types.ObjectId | null;
+  destinationAccountId: Types.ObjectId | null;
+  credit: boolean;
+  _id: unknown;
+  __v: number;
+}
+
+export interface IPaginateTransaction {
+  transactions: ITransaction[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
 }

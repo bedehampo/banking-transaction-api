@@ -22,6 +22,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 import { PaginationDto } from './dto/pagination.dto';
 import { SetTransactionPinDto } from './dto/transactionPin.dto';
+import { IUser, IUsers } from 'src/common/interfaces/auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -151,7 +152,10 @@ export class AuthService {
   }
 
   //Get users
-  async getUsers(req: CustomRequest, dto: PaginationDto) {
+  async getUsers(
+    req: CustomRequest,
+    dto: PaginationDto,
+  ): Promise<{ msg: string; data: IUsers }> {
     try {
       await this.userUtils.validateUser(req.user._id);
 
@@ -195,7 +199,10 @@ export class AuthService {
   }
 
   // Get user by id
-  async getUserById(req: CustomRequest, id: string) {
+  async getUserById(
+    req: CustomRequest,
+    id: string,
+  ): Promise<{ msg: string; data: IUser }> {
     try {
       await this.userUtils.validateUser(req.user._id);
 
@@ -227,7 +234,10 @@ export class AuthService {
   }
 
   // set transaction pin
-  async setTransactionPin(req: CustomRequest, dto: SetTransactionPinDto) {
+  async setTransactionPin(
+    req: CustomRequest,
+    dto: SetTransactionPinDto,
+  ): Promise<{ msg: string }> {
     try {
       //validate user
       const user = await this.userUtils.validateUser(req.user._id);
