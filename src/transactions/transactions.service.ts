@@ -14,10 +14,13 @@ import { User } from 'src/auth/schema/user.schema';
 import { UserUtils } from 'src/auth/utils/user.validator';
 import { Transaction } from './schema/transaction.schema';
 import { CurrencySymbol } from './schema/currency.schema';
-import * as currencyCode from 'currency-codes';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
-import { ICurrency } from 'src/common/interfaces/general.interface';
+import {
+  ICurrency,
+  IPaginateTransaction,
+  ITransaction,
+} from 'src/common/interfaces/general.interface';
 import { CurrencyService } from './currency.service';
 import { convertCurrency, verifyPassword } from 'src/common/utils/helper';
 import { DepositTransactionDto } from './dto/deposit-transaction.dto';
@@ -48,34 +51,34 @@ export class TransactionsService {
   }
 
   // populate the currency record with currency info
-  async saveCurrencyInfo(): Promise<void> {
-    try {
-      const existingCurrencies = await this.currencyModel
-        .find({}, { code: 1 })
-        .lean();
-      const existingCodes = new Set(existingCurrencies.map((cur) => cur.code));
+  //   async saveCurrencyInfo(): Promise<void> {
+  //     try {
+  //       const existingCurrencies = await this.currencyModel
+  //         .find({}, { code: 1 })
+  //         .lean();
+  //       const existingCodes = new Set(existingCurrencies.map((cur) => cur.code));
 
-      const currenciesToInsert = currencyCode.data
-        .filter((currency) => !existingCodes.has(currency.code))
-        .map((currency) => ({
-          code: currency.code,
-          number: Number(currency.number),
-          digit: currency.digits,
-          currency: currency.currency,
-          countries: currency.countries,
-        }));
+  //       const currenciesToInsert = currencyCode.data
+  //         .filter((currency) => !existingCodes.has(currency.code))
+  //         .map((currency) => ({
+  //           code: currency.code,
+  //           number: Number(currency.number),
+  //           digit: currency.digits,
+  //           currency: currency.currency,
+  //           countries: currency.countries,
+  //         }));
 
-      if (currenciesToInsert.length > 0) {
-        await this.currencyModel.insertMany(currenciesToInsert);
-        console.log(`${currenciesToInsert.length} new currencies saved.`);
-      } else {
-        console.log('No new currencies to insert.');
-      }
-    } catch (error) {
-      console.error('Error saving currency info:', error);
-      throw error;
-    }
-  }
+  //       if (currenciesToInsert.length > 0) {
+  //         await this.currencyModel.insertMany(currenciesToInsert);
+  //         console.log(`${currenciesToInsert.length} new currencies saved.`);
+  //       } else {
+  //         console.log('No new currencies to insert.');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error saving currency info:', error);
+  //       throw error;
+  //     }
+  //   }
 
   // Get currency
   async getCurrencies(
@@ -110,7 +113,9 @@ export class TransactionsService {
   }
 
   // Deposit
-  async deposit(dto: DepositTransactionDto) {
+  async deposit(
+    dto: DepositTransactionDto,
+  ): Promise<{ msg: string; data: ITransaction }> {
     const session = await this.accountModel.db.startSession();
     session.startTransaction();
     try {
@@ -231,7 +236,11 @@ export class TransactionsService {
   }
 
   // withdrawal
-  async withdraw(req: CustomRequest, dto: WithdrawTransactionDto, pin: string) {
+  async withdraw(
+    req: CustomRequest,
+    dto: WithdrawTransactionDto,
+    pin: string,
+  ): Promise<{ msg: string; data: ITransaction }> {
     const session = await this.accountModel.db.startSession();
     session.startTransaction();
 
@@ -353,7 +362,11 @@ export class TransactionsService {
   }
 
   // transfer
-  async transfer(req: CustomRequest, dto: TransferTransactionDto, pin: string) {
+  async transfer(
+    req: CustomRequest,
+    dto: TransferTransactionDto,
+    pin: string,
+  ): Promise<{ msg: string; data: ITransaction }> {
     const session = await this.accountModel.db.startSession();
     session.startTransaction();
 
@@ -492,7 +505,10 @@ export class TransactionsService {
   }
 
   // Get transactions
-  async getTransactions(req: CustomRequest, query: GetTransactionsDto) {
+  async getTransactions(
+    req: CustomRequest,
+    query: GetTransactionsDto,
+  ): Promise<{ msg: string; data: IPaginateTransaction }> {
     try {
       const user = await this.userUtils.validateUser(req.user._id);
       const { type, page = 1, limit = 10 } = query;
@@ -539,7 +555,10 @@ export class TransactionsService {
   }
 
   // Get transaction
-  async getTransaction(req: CustomRequest, id: string) {
+  async getTransaction(
+    req: CustomRequest,
+    id: string,
+  ): Promise<{ msg: string; data: ITransaction }> {
     try {
       const user = await this.userUtils.validateUser(req.user._id);
 
