@@ -34,8 +34,8 @@ import { LedgerEntry } from './schema/ledger.schema';
 @Injectable()
 export class TransactionsService {
   private readonly logger = new Logger(TransactionsService.name);
-  private userUtils: UserUtils;
-  private transactionUtils: TransactionUtils;
+  public userUtils: UserUtils;
+  public transactionUtils: TransactionUtils;
   constructor(
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Account') private accountModel: Model<Account>,

@@ -39,3 +39,42 @@ export interface IPaginateTransaction {
   currentPage: number;
   totalPages: number;
 }
+
+export interface IRegisterTest {
+  firstName: string;
+  lastName: string;
+  mobileNumber: string;
+  password: string;
+}
+
+export interface ILoginTest {
+  mobileNumber: string;
+  password: string;
+}
+
+export interface IPaginationTest {
+  page: number;
+  limit: number;
+}
+
+export interface IGetUsersResponse {
+  data: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    accountNumber: string;
+  }[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface ITransactionTest {
+  pin: string;
+  confirmPin: string;
+  confirmPinMatch: () => boolean;
+}
+
+export interface ISetTransactionPinResponse {
+  message: string;
+}
