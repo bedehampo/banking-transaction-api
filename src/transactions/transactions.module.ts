@@ -9,7 +9,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Transaction, TransactionSchema } from './schema/transaction.schema';
 import { CurrencySymbol, CurrencySymbolSchema } from './schema/currency.schema';
-import { CurrencyService } from './currency.service';
 import { LedgerEntry, LedgerEntrySchema } from './schema/ledger.schema';
 
 @Module({
@@ -33,6 +32,6 @@ import { LedgerEntry, LedgerEntrySchema } from './schema/ledger.schema';
     }),
   ],
   controllers: [TransactionsController],
-  providers: [TransactionsService, CurrencyService],
+  providers: [TransactionsService],
 })
 export class TransactionsModule {}

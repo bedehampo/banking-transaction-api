@@ -21,7 +21,6 @@ import {
   IPaginateTransaction,
   ITransaction,
 } from 'src/common/interfaces/general.interface';
-import { CurrencyService } from './currency.service';
 import { convertCurrency, verifyPassword } from 'src/common/utils/helper';
 import { DepositTransactionDto } from './dto/deposit-transaction.dto';
 import { Status, TransactionTypeStatus } from 'src/common/enums/status.enums';
@@ -35,8 +34,8 @@ import { LedgerEntry } from './schema/ledger.schema';
 @Injectable()
 export class TransactionsService {
   private readonly logger = new Logger(TransactionsService.name);
-  private userUtils: UserUtils;
-  private transactionUtils: TransactionUtils;
+  public userUtils: UserUtils;
+  public transactionUtils: TransactionUtils;
   constructor(
     @InjectModel('User') private userModel: Model<User>,
     @InjectModel('Account') private accountModel: Model<Account>,
@@ -44,7 +43,6 @@ export class TransactionsService {
     @InjectModel('CurrencySymbol') private currencyModel: Model<CurrencySymbol>,
     @InjectModel('LedgerEntry') private ledgerModel: Model<LedgerEntry>,
     private jwtService: JwtService,
-    private readonly currencyService: CurrencyService,
   ) {
     this.userUtils = new UserUtils(this.userModel, this.accountModel);
     this.transactionUtils = new TransactionUtils(this.currencyModel);
@@ -145,13 +143,11 @@ export class TransactionsService {
       const transactionAmount = Decimal128.fromString(amount.toString());
 
       // Check if account exists and update balance
-      const account = await this.accountModel
-        .findOneAndUpdate(
-          { accountNumber: accountNumber, status: Status.VERIFIED },
-          { $inc: { balance: amountDecimal }, $set: { updatedAt: new Date() } },
-          { new: true, session },
-        )
-        .exec();
+      const account = await this.accountModel.findOneAndUpdate(
+        { accountNumber: accountNumber, status: Status.VERIFIED },
+        { $inc: { balance: amountDecimal }, $set: { updatedAt: new Date() } },
+        { new: true, session },
+      );
 
       if (!account) {
         throw new NotFoundException(
@@ -264,12 +260,10 @@ export class TransactionsService {
       const amountDecimal = Decimal128.fromString(withdrawAmountNGN.toString());
       const transactionAmount = Decimal128.fromString(amount.toString());
 
-      const account = await this.accountModel
-        .findOne({
-          user: user._id,
-          status: Status.VERIFIED,
-        })
-        .exec();
+      const account = await this.accountModel.findOne({
+        user: user._id,
+        status: Status.VERIFIED,
+      });
 
       if (!account) {
         throw new NotFoundException('Account not found.');
@@ -390,23 +384,19 @@ export class TransactionsService {
       const amountDecimal = Decimal128.fromString(transferAmountNGN.toString());
       const transactionAmount = Decimal128.fromString(amount.toString());
 
-      const senderAccount = await this.accountModel
-        .findOne({
-          user: user._id,
-          status: Status.VERIFIED,
-        })
-        .exec();
+      const senderAccount = await this.accountModel.findOne({
+        user: user._id,
+        status: Status.VERIFIED,
+      });
 
       if (!senderAccount) {
         throw new NotFoundException('Sender account not found.');
       }
 
-      const recipientAccount = await this.accountModel
-        .findOne({
-          accountNumber: accountNumber,
-          status: Status.VERIFIED,
-        })
-        .exec();
+      const recipientAccount = await this.accountModel.findOne({
+        accountNumber: accountNumber,
+        status: Status.VERIFIED,
+      });
 
       if (!recipientAccount) {
         throw new NotFoundException('Recipient account not found.');
@@ -515,9 +505,7 @@ export class TransactionsService {
 
       const skip = (page - 1) * limit;
 
-      const account = await this.accountModel
-        .findOne({ user: user._id })
-        .exec();
+      const account = await this.accountModel.findOne({ user: user._id });
 
       if (!account) {
         throw new NotFoundException('Account not found');
@@ -535,8 +523,7 @@ export class TransactionsService {
       const transactions = await this.transactionModel
         .find(filter)
         .skip(skip)
-        .limit(limit)
-        .exec();
+        .limit(limit);
 
       const totalCount = await this.transactionModel.countDocuments(filter);
 
@@ -576,7 +563,7 @@ export class TransactionsService {
       }
 
       // Retrieve the transaction
-      const transaction = await this.transactionModel.findById(id).exec();
+      const transaction = await this.transactionModel.findById(id);
 
       if (!transaction) {
         throw new NotFoundException('Transaction not found');

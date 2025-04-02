@@ -95,9 +95,13 @@ export class AuthService {
       );
 
       await session.commitTransaction();
+
+      // Transform in-memory to exclude password
+      const userWithoutPassword = createdUser.toObject();
+      delete userWithoutPassword.password;
       return {
         msg: 'User account successfully created',
-        data: createdUser,
+        data: userWithoutPassword,
       };
     } catch (error) {
       await session.abortTransaction();
@@ -107,7 +111,6 @@ export class AuthService {
     }
   }
 
-  //Login User
   //Login User
   async login(dto: LoginDto): Promise<{ msg: string; access_token: string }> {
     try {
@@ -139,6 +142,7 @@ export class AuthService {
   //Get login user
   async getLoginUser(req: CustomRequest): Promise<{ msg: string; data: User }> {
     try {
+      console.log(req);
       // Check user existence
       const user = await this.userUtils.getUserById(req.user._id);
 
@@ -164,7 +168,10 @@ export class AuthService {
       const skip = (page - 1) * limit;
 
       const users = await this.userModel
-        .find({ status: { $in: ['unverified', 'verified'] } })
+        .find({
+          _id: { $ne: req.user._id },
+          status: { $in: ['unverified', 'verified'] },
+        })
         .populate({ path: 'accountId', select: 'accountNumber' })
         .select('_id firstName lastName accountId')
         .limit(limit)
