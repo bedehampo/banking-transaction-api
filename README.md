@@ -110,8 +110,19 @@ This initial commit sets up the basic NestJS project structure.
   - Get single transaction history
     Get `transaction/:id`
 
-## Future Development
-This project will be expanded to include:
-* Unit tests.
+## Input Validation - 100%
+
+## Test Coverage
+* Auth.controller - 100%
+* Transaction service - 50%
+
+## Pending Test Coverage
+* Auth Service.
+* Transaction controller.
+* Account controller.
+* Account Service.
+* Helper functions.
+* User utilities.
+* Transaction utilities.
 
 
