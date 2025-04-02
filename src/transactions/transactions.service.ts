@@ -14,7 +14,6 @@ import { User } from 'src/auth/schema/user.schema';
 import { UserUtils } from 'src/auth/utils/user.validator';
 import { Transaction } from './schema/transaction.schema';
 import { CurrencySymbol } from './schema/currency.schema';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 import {
   ICurrency,
@@ -598,11 +597,4 @@ export class TransactionsService {
   //       process.exit();
   //     }
   //   }
-
-  @Cron(CronExpression.EVERY_SECOND)
-  async handleCronMinutes() {
-    // await this.seedCashAccount();
-    // this.logger.log('Cron job executed every second');
-    // await this.saveCurrencyInfo();
-  }
 }
