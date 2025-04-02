@@ -20,7 +20,7 @@ import { Decimal128 } from 'mongodb';
 import { convertCurrency, verifyPassword } from 'src/common/utils/helper';
 import { CustomRequest } from 'src/common/interfaces/custom-request';
 import { WithdrawTransactionDto } from './dto/withdrawal-transaction.dto';
-import { TransferTransactionDto } from './dto/transfer-transaction.dto';
+// import { TransferTransactionDto } from './dto/transfer-transaction.dto';
 
 jest.mock('src/common/utils/helper');
 
