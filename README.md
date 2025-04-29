@@ -1,6 +1,6 @@
-# Banking Transactions API (Ledger System)
+# LightShed Backend
 
-This project is a NestJS-based API for a banking ledger system. It handles financial transactions with ACID compliance and double-entry accounting, using MongoDB as the database.
+LightShed backend codebase.
 
 ## Initial Setup
 
@@ -11,8 +11,8 @@ This initial commit sets up the basic NestJS project structure.
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/bedehampo/banking-transaction-api.git
-    cd banking_ledger
+    git clone https://github.com/bedehampo/light-shed-api.git
+    cd lightShedBackend
     ```
 
 2.  **Install dependencies:**
@@ -33,27 +33,13 @@ This initial commit sets up the basic NestJS project structure.
     - app.controller.ts 
     - app.service.ts
     - main.ts 
- - auth/
+ - src/auth/
    - dto/ 
    - auth.service.ts
    - auth.controller.ts
    - auth.module.ts
    - auth.service.spec.ts
    - auth.controller.spec.ts
- - accounts/
-   - dto/ 
-   - accounts.service.ts
-   - accounts.controller.ts
-   - accounts.module.ts
-   - accounts.service.spec.ts
-   - accounts.controller.spec.ts
- - transactions/
-   - dto/ 
-   - accounts.service.ts
-   - accounts.controller.ts
-   - accounts.module.ts
-   - accounts.service.spec.ts
-   - accounts.controller.spec.ts
  - common/
    - filter/
    - interface/
@@ -65,64 +51,5 @@ This initial commit sets up the basic NestJS project structure.
  - yarn.lock
  - README.md 
 
-- Features Implemented
-  - Authentication
-    - This project now includes a basic authentication process with the following endpoints:
-
-     - Register User: Allows users to register, automatically creating an account for them.
-       POST `/create-account`
-     - Login: Authenticates users and provides access to protected endpoints.
-       POST `/login`
-     - Get Logged-In User: Retrieves details of the currently logged-in user.
-       GET `/get-login-user`
-     - Get All Users: Fetches a list of all registered users.
-       GET `/get-users`
-     - Get User by ID: Retrieves details of a specific user by their ID.
-       GET `/get-user/:id`
-     - Set transaction pin.
-       PosT `set-pin`
-     
-     
-       
-- Account Management
-  The following endpoints are available for account-related operations:
-
-  - Get My Account Details: Retrieves the account details of the logged-in user.
-    GET `/get-my-account-details`
-  - Get User Account Details: Retrieves account details for a specific user by their ID.
-    GET `/get-user-account-details/:userId`
- - Authentication
-   - Docker containerization
-
-
-- Transaction Management
-  The following endpoints are available for transaction-related operations:
-  - Get currencies and code
-    Get `get-currencies`
-  - Deposit money.
-    Post `deposit`
-  - Withdraw money
-    Post `withdraw`
-  - Transfer money
-    Post `transfer`
-  - Get transactions history
-    Get `transactions`
-  - Get single transaction history
-    Get `transaction/:id`
-
-## Input Validation - 100%
-
-## Test Coverage
-* Auth.controller - 100%
-* Transaction service - 50%
-
-## Pending Test Coverage
-* Auth Service.
-* Transaction controller.
-* Account controller.
-* Account Service.
-* Helper functions.
-* User utilities.
-* Transaction utilities.
 
 

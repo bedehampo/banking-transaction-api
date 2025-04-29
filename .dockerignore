@@ -3,6 +3,8 @@
 node_modules
 dist
 .env
+note.txt
+note
 Dockerfile
 docker-compose.yml
 README.md

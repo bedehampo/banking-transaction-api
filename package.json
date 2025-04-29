@@ -1,8 +1,8 @@
 {
-  "name": "banking-ledger",
+  "name": "lightshed-backend",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "Bede E. Hampo",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

@@ -4,7 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -22,8 +21,8 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('Banking Ledger API')
-    .setDescription('Banking Ledger API documentation')
+    .setTitle('LightShed Backend API')
+    .setDescription('The API description for LightShed')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -35,7 +34,7 @@ async function bootstrap() {
     )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('lightshed', app, document);
 
   const PORT = process.env.PORT;
 
